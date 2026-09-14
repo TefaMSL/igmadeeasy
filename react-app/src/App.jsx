@@ -1,6 +1,5 @@
 import React from 'react';
 import { AppProvider } from './context/AppContext';
-import CustomCursor from './components/CustomCursor';
 import Aurora from './components/Aurora';
 import Background3D from './components/Background3D';
 import Navbar from './components/Navbar';
@@ -21,8 +20,6 @@ import Toast from './components/Toast';
 export function AppContent() {
   return (
     <div className="relative min-h-screen flex flex-col transition-colors duration-300">
-      {/* Interactive Custom Cursor with Book Emoji */}
-      <CustomCursor />
 
       {/* Aurora Background Orbs */}
       <Aurora />

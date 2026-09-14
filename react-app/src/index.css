@@ -111,16 +111,6 @@ a, button, input, select, textarea, label, [role="button"], .lang-btn, .theme-bt
   cursor: none !important;
 }
 
-/* Touch fallback: Restore normal cursor on coarse touch screens */
-@media (hover: none) and (pointer: coarse) {
-  #custom-cursor {
-    display: none !important;
-  }
-  *, *::before, *::after, html, body, a, button, input, select, textarea, label, [role="button"] {
-    cursor: auto !important;
-  }
-}
-
 /* ── Custom Cursor with Book Emoji ── */
 #custom-cursor {
   position: fixed;
