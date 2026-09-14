@@ -1,5 +1,6 @@
 import React from 'react';
 import { AppProvider } from './context/AppContext';
+import CustomCursor from './components/CustomCursor';
 import Background3D from './components/Background3D';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -19,7 +20,7 @@ import Toast from './components/Toast';
 export function AppContent() {
   return (
     <div className="relative min-h-screen flex flex-col transition-colors duration-300">
-
+      <CustomCursor />
 
       {/* 3D Dynamic Cascade ('طوفان الكتب') Three.js */}
       <Background3D />

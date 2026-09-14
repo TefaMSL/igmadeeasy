@@ -108,7 +108,21 @@ body {
 a, button, input, select, textarea, label, [role="button"], .lang-btn, .theme-btn, .btn, .nav-cta, .thumb-btn {
   color: inherit;
   text-decoration: none;
-  cursor: none !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  #custom-cursor {
+    display: none !important;
+  }
+  *, *::before, *::after, html, body, a, button, input, select, textarea, label, [role="button"] {
+    cursor: auto !important;
+  }
 }
 
 /* ── Custom Cursor with Book Emoji ── */
