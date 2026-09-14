@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIION Group — CMS Admin</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background: var(--bg-void); }
+    .portal-nav { padding: 20px 0; border-bottom: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
+    .portal-nav .container { display: flex; justify-content: space-between; align-items: center; }
+    .portal-main { padding: 60px 0; }
+    .admin-header { display: flex; justify-content: space-between; margin-bottom: 40px; }
+    .admin-title { font-family: var(--font-display); font-size: 2rem; color: var(--text-white); }
+    
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+    
+    .project-list {
+      display: grid; gap: 16px; margin-top: 24px;
+    }
+    .project-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px 24px; background: rgba(255,255,255,0.02);
+      border: 1px solid var(--glass-border); border-radius: 12px;
+    }
+    .project-item h4 { color: var(--text-white); font-size: 1.1rem; }
+    .project-item p { color: var(--text-dim); font-size: 0.85rem; }
+    
+    .delete-btn { color: var(--rose); background: rgba(251, 113, 133, 0.1); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer; border: none; }
+    
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    /* Override custom cursor */
+    @media (hover: hover) and (pointer: fine) {
+      body, a, input, textarea, select { cursor: auto !important; }
+      button, a { cursor: pointer !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="portal-nav">
+    <div class="container">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.png" alt="VIION Group" class="logo-img">
+        <span style="color: var(--rose); font-size: 0.7rem; margin-left: 10px; font-weight: bold;">ADMIN</span>
+      </a>
+      <div class="nav-links">
+        <span id="user-email" style="color: var(--text-dim); margin-right: 16px; font-size: 0.9rem;"></span>
+        <button id="logoutBtn" class="btn btn-ghost" style="padding: 8px 20px;">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="portal-main">
+    <div class="container">
+      
+      <div class="admin-header">
+        <h1 class="admin-title">Content Management (CMS)</h1>
+      </div>
+
+      <div class="panel-card">
+        <h3>Add New Portfolio Project</h3>
+        <p style="color: var(--text-dim); margin-bottom: 24px;">This project will instantly appear in the "Success Stories" section on both English and Arabic sites.</p>
+        
+        <form id="addProjectForm">
+          <div class="form-row">
+            <div class="form-field">
+              <label>Project Name (English)</label>
+              <input type="text" id="title_en" required placeholder="e.g., Al-Obour Hospital">
+            </div>
+            <div class="form-field">
+              <label>Project Name (Arabic)</label>
+              <input type="text" id="title_ar" required placeholder="مستشفى العبور" dir="rtl">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-field">
+              <label>Tag (English)</label>
+              <input type="text" id="tag_en" required placeholder="Hospital Infrastructure">
+            </div>
+            <div class="form-field">
+              <label>Tag (Arabic)</label>
+              <input type="text" id="tag_ar" required placeholder="بنية تحتية مستشفى" dir="rtl">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>Bullet Points (English - comma separated)</label>
+              <textarea id="bullets_en" required rows="3" placeholder="Upgraded network, Installed Firewall, Implemented EHR"></textarea>
+            </div>
+            <div class="form-field">
+              <label>Bullet Points (Arabic - comma separated)</label>
+              <textarea id="bullets_ar" required rows="3" dir="rtl" placeholder="تحديث الشبكة, تركيب جدار حماية, تنفيذ نظام السجلات"></textarea>
+            </div>
+          </div>
+          
+          <!-- Theme Color for the sidebar -->
+          <div class="form-field" style="max-width: 200px;">
+            <label>Theme Color</label>
+            <select id="theme_color" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+              <option value="cyan">Cyan (Blue)</option>
+              <option value="violet">Violet (Purple)</option>
+              <option value="emerald">Emerald (Green)</option>
+              <option value="rose">Rose (Red)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="submitProjBtn" style="margin-top: 16px;">Add Project</button>
+        </form>
+      </div>
+
+      <div class="panel-card">
+        <h3>Manage Projects</h3>
+        <div class="project-list" id="projectList">
+          <div style="color: var(--text-dim);">Loading projects from database...</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="supabase-config.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const isDemo = sessionStorage.getItem('demo_mode') === 'true';
+      let user = null;
+
+      // 1. Auth Check
+      if (!isDemo) {
+        if (!supabaseClient) {
+          document.getElementById('user-email').textContent = "Supabase Not Configured";
+          return;
+        }
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+          window.location.href = 'login.html';
+          return;
+        }
+        user = session.user;
+      } else {
+        user = { id: 'demo-admin', email: 'admin@viiongroup.com (DEMO)' };
+      }
+      
+      document.getElementById('user-email').textContent = user.email;
+
+      // Logout
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        sessionStorage.removeItem('demo_mode');
+        if (supabaseClient && !isDemo) await supabaseClient.auth.signOut();
+        window.location.href = 'login.html';
+      });
+
+      // 2. Fetch and Render Projects
+        let data = [];
+        let error = null;
+
+        if (isDemo) {
+          data = [
+            { id: 1, title_en: 'Cairo University Hospital', title_ar: 'مستشفى جامعة القاهرة', tag_en: 'EHR Implementation', tag_ar: 'نظام السجلات', theme_color: 'cyan' },
+            { id: 2, title_en: 'Al-Shorouk Clinic', title_ar: 'عيادة الشروق', tag_en: 'Cloud Hosting', tag_ar: 'استضافة سحابية', theme_color: 'violet' }
+          ];
+        } else {
+          const res = await supabaseClient.from('portfolio_projects').select('*').order('created_at', { ascending: false });
+          data = res.data;
+          error = res.error;
+        }
+        
+        list.innerHTML = '';
+        
+        if (error) {
+          list.innerHTML = `<div style="color: var(--rose);">Error loading projects: Create 'portfolio_projects' table in Supabase first.</div>`;
+          return;
+        }
+
+        if(data.length === 0) {
+          list.innerHTML = `<div style="color: var(--text-dim);">No projects found. Add one above!</div>`;
+          return;
+        }
+
+        data.forEach(proj => {
+          const item = document.createElement('div');
+          item.className = 'project-item';
+          item.innerHTML = `
+            <div>
+              <h4>${proj.title_en} <span style="font-size: 0.8rem; color: var(--text-dim);">(${proj.title_ar})</span></h4>
+              <p>${proj.tag_en}</p>
+            </div>
+            <button class="delete-btn" onclick="deleteProject(${proj.id})">Delete</button>
+          `;
+          list.appendChild(item);
+        });
+      }
+
+      loadProjects();
+
+      // Delete globally scoped
+      window.deleteProject = async (id) => {
+        if(confirm('Are you sure you want to delete this project?')) {
+          if (!isDemo) {
+            await supabaseClient.from('portfolio_projects').delete().eq('id', id);
+          } else {
+            alert("Demo Mode: Project deleted! (Frontend Simulation)");
+          }
+          loadProjects();
+        }
+      };
+
+      // 3. Add Project
+      document.getElementById('addProjectForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitProjBtn');
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
+
+        const newProj = {
+          title_en: document.getElementById('title_en').value,
+          title_ar: document.getElementById('title_ar').value,
+          tag_en: document.getElementById('tag_en').value,
+          tag_ar: document.getElementById('tag_ar').value,
+          bullets_en: document.getElementById('bullets_en').value.split(',').map(s=>s.trim()),
+          bullets_ar: document.getElementById('bullets_ar').value.split(',').map(s=>s.trim()),
+          theme_color: document.getElementById('theme_color').value
+        };
+
+        let error = null;
+        if (!isDemo) {
+          const res = await supabaseClient.from('portfolio_projects').insert([newProj]);
+          error = res.error;
+        } else {
+          alert("Demo Mode: Project added! (Frontend Simulation)");
+        }
+        
+        if (error) {
+          alert("Error saving project. Ensure 'portfolio_projects' table exists.");
+          console.error(error);
+        } else {
+          document.getElementById('addProjectForm').reset();
+          loadProjects();
+        }
+
+        btn.textContent = 'Add Project';
+        btn.disabled = false;
+      });
+
+    });
+  </script>
+</body>
+</html>

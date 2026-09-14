@@ -1,0 +1,367 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   IG Made Easy — Original Premium Design System
+   Colors: Navy #162447 | Orange #EA580C / #F97316 | Teal #0284C7
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* LIGHT MODE (Ultra-translucent frosted glass revealing 3D space & models) */
+  --bg: #F8FAFC;
+  --bg2: rgba(241, 245, 249, 0.35);
+  --bg-card: rgba(255, 255, 255, 0.28);
+  --bg-card-hover: rgba(255, 255, 255, 0.48);
+  --glass: rgba(255, 255, 255, 0.28);
+  --glass-border: rgba(255, 255, 255, 0.65);
+  --glass-border-h: #F97316;
+  --card-shadow: 0 10px 36px -4px rgba(15, 23, 42, 0.06), 0 2px 8px -1px rgba(15, 23, 42, 0.03), inset 0 1px 1px 0 rgba(255, 255, 255, 0.85);
+  --card-shadow-hover: 0 18px 48px -4px rgba(15, 23, 42, 0.10), 0 4px 18px -2px rgba(249, 115, 22, 0.18), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  --navy: #162447;
+  --navy-mid: #1E3A8A;
+  --orange: #EA580C;
+  --orange-bright: #F97316;
+  --orange-glow: rgba(234, 88, 12, 0.28);
+  --teal: #0284C7;
+  --text: #0F172A;
+  --text-2: #1E293B;
+  --text-dim: #334155;
+  --text-muted: #64748B;
+  --gradient: linear-gradient(135deg, #EA580C 0%, #1E3A8A 100%);
+  --gradient-orange: linear-gradient(135deg, #F97316, #EA580C);
+  --gradient-navy: linear-gradient(135deg, #162447, #1E3A8A);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] {
+  --bg: #060D1E;
+  --bg2: rgba(10, 22, 40, 0.35);
+  --bg-card: rgba(14, 26, 52, 0.32);
+  --bg-card-hover: rgba(20, 36, 72, 0.50);
+  --glass: rgba(10, 22, 40, 0.32);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-border-h: rgba(249, 115, 22, 0.5);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35), inset 0 1px 1px 0 rgba(255, 255, 255, 0.08);
+  --card-shadow-hover: 0 16px 44px 0 rgba(0, 0, 0, 0.45), 0 0 24px rgba(249, 115, 22, 0.18), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
+  --text: #F8FAFC;
+  --text-2: #E2E8F0;
+  --text-dim: #94A3B8;
+  --text-muted: #64748B;
+}
+
+/* ── Scrollbar Suppression (إخفاء السليد الجانبي زي السايت القديم) ── */
+html, body {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+::-webkit-scrollbar, *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* ── Cursor Nullification on Desktop for Custom Cursor ── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: none !important;
+}
+html {
+  scroll-behavior: auto;
+  scroll-padding-top: 80px;
+  cursor: none !important;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
+}
+body {
+  font-family: 'Cairo', 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  cursor: none !important;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+/* ── 3D Background Canvas Layer Isolation ── */
+#three-canvas-container {
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  contain: strict;
+  will-change: transform;
+}
+#three-canvas-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+a, button, input, select, textarea, label, [role="button"], .lang-btn, .theme-btn, .btn, .nav-cta, .thumb-btn {
+  color: inherit;
+  text-decoration: none;
+  cursor: none !important;
+}
+
+/* Touch fallback: Restore normal cursor on coarse touch screens */
+@media (hover: none) and (pointer: coarse) {
+  #custom-cursor {
+    display: none !important;
+  }
+  *, *::before, *::after, html, body, a, button, input, select, textarea, label, [role="button"] {
+    cursor: auto !important;
+  }
+}
+
+/* ── Custom Cursor with Book Emoji ── */
+#custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  margin-left: -22px;
+  pointer-events: none;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+#custom-cursor.active {
+  opacity: 1;
+}
+
+.cursor-ring {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--orange);
+  box-shadow: 0 0 16px var(--orange-glow), inset 0 0 8px rgba(249, 115, 22, 0.15);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cursor-book {
+  position: absolute;
+  font-size: 19px;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  transform: translate(0, 0);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, filter 0.2s ease;
+  filter: drop-shadow(0 2px 8px rgba(249, 115, 22, 0.6));
+}
+
+.cursor-text-beam {
+  position: absolute;
+  width: 3px;
+  height: 24px;
+  background: var(--orange);
+  border-radius: 3px;
+  box-shadow: 0 0 12px var(--orange);
+  opacity: 0;
+  transform: scaleY(0.2);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Cursor State 1: Buttons, Links, Clickables */
+#custom-cursor.hover-btn .cursor-ring {
+  width: 54px;
+  height: 54px;
+  border-color: #FF8A3D;
+  background: rgba(249, 115, 22, 0.16);
+  box-shadow: 0 0 26px rgba(249, 115, 22, 0.9);
+}
+#custom-cursor.hover-btn .cursor-book {
+  transform: scale(1.35) rotate(-14deg);
+  filter: drop-shadow(0 4px 16px rgba(249, 115, 22, 0.95));
+}
+
+/* Cursor State 2: Cards & Bento */
+#custom-cursor.hover-card .cursor-ring {
+  width: 64px;
+  height: 64px;
+  border: 2px dashed rgba(249, 115, 22, 0.7);
+  background: rgba(249, 115, 22, 0.08);
+  animation: cursorCardSpin 8s linear infinite;
+}
+#custom-cursor.hover-card .cursor-book {
+  transform: scale(1.15) rotate(10deg);
+}
+@keyframes cursorCardSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Cursor State 3: Text & Inputs */
+#custom-cursor.hover-text .cursor-ring {
+  opacity: 0;
+  transform: scale(0.3);
+}
+#custom-cursor.hover-text .cursor-book {
+  opacity: 0;
+  transform: scale(0.2);
+}
+#custom-cursor.hover-text .cursor-text-beam {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* Cursor State 4: Book Showcase */
+#custom-cursor.hover-book .cursor-ring {
+  width: 60px;
+  height: 60px;
+  border-color: #38BDF8;
+  background: rgba(56, 189, 248, 0.14);
+  box-shadow: 0 0 26px rgba(56, 189, 248, 0.7);
+}
+#custom-cursor.hover-book .cursor-book {
+  transform: scale(1.4) rotate(12deg);
+}
+
+/* Clicking bounce */
+#custom-cursor.clicking {
+  transform: scale(0.75);
+}
+#custom-cursor.clicking .cursor-book {
+  transform: scale(0.8) rotate(-8deg);
+}
+
+/* ── Aurora Orbs ── */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.aurora-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  will-change: transform;
+  transform: translateZ(0);
+  animation: orbFloat 22s infinite ease-in-out alternate;
+}
+[data-theme="dark"] .aurora-orb {
+  mix-blend-mode: screen;
+  opacity: 0.35;
+}
+:root .aurora-orb {
+  mix-blend-mode: multiply;
+  opacity: 0.18;
+}
+.aurora-orb:nth-child(1) {
+  width: 450px;
+  height: 450px;
+  background: #F97316;
+  top: -10%;
+  right: -8%;
+  animation-duration: 25s;
+}
+.aurora-orb:nth-child(2) {
+  width: 400px;
+  height: 400px;
+  background: #162447;
+  top: 25%;
+  left: -8%;
+  animation-duration: 20s;
+  animation-delay: -6s;
+}
+.aurora-orb:nth-child(3) {
+  width: 350px;
+  height: 350px;
+  background: #0284C7;
+  bottom: -10%;
+  left: 35%;
+  animation-duration: 22s;
+  animation-delay: -12s;
+}
+@keyframes orbFloat {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(30px, -30px, 0) scale(1.05); }
+  100% { transform: translate3d(-20px, 20px, 0) scale(0.96); }
+}
+
+@layer components {
+  /* ── Gradient Text ── */
+  .gradient-text {
+    background: var(--gradient-orange);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Glass Panels ── */
+  .glass-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-panel:hover {
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--glass-border-h);
+  }
+
+  /* ── Primary Button ── */
+  .btn-gradient {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 32px;
+    font-weight: 800;
+    font-size: 1rem;
+    border-radius: 50px;
+    background: var(--gradient-orange);
+    color: #fff;
+    box-shadow: 0 4px 24px var(--orange-glow);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+  }
+  .btn-gradient:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 36px var(--orange-glow);
+  }
+  .btn-gradient:active {
+    transform: translateY(0);
+  }
+
+  /* ── Secondary Ghost Button ── */
+  .btn-outline-brand {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 13px 28px;
+    font-weight: 800;
+    font-size: 1rem;
+    border-radius: 50px;
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--glass-border);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+  }
+  .btn-outline-brand:hover {
+    border-color: var(--orange-bright);
+    color: var(--orange-bright);
+    background: rgba(249, 115, 22, 0.06);
+    transform: translateY(-2px);
+  }
+}

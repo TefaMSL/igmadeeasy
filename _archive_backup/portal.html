@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIION Group — Support Portal</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background: var(--bg-void); }
+    .portal-nav {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+    }
+    .portal-nav .container { display: flex; justify-content: space-between; align-items: center; }
+    .portal-main { padding: 80px 0; min-height: calc(100vh - 80px); }
+    
+    .portal-header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 40px;
+    }
+    .portal-title { font-family: var(--font-display); font-size: 2.2rem; color: var(--text-white); }
+    .portal-subtitle { color: var(--text-dim); margin-top: 8px; }
+    
+    .tickets-container {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    
+    .ticket-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 150px 150px;
+      padding: 24px 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .ticket-row:hover { background: rgba(56, 189, 248, 0.03); }
+    .ticket-row.header {
+      background: rgba(15, 23, 42, 0.5);
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .ticket-row:last-child { border-bottom: none; }
+    
+    .t-id { color: var(--cyan); font-family: monospace; }
+    .t-subject { font-weight: 600; color: var(--text-light); }
+    .t-date { color: var(--text-dim); font-size: 0.9rem; }
+    .t-status { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 0.75rem; font-weight: 700; text-align: center; }
+    
+    .status-open { background: rgba(251, 191, 36, 0.15); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+    .status-progress { background: rgba(56, 189, 248, 0.15); color: var(--cyan); border: 1px solid rgba(56, 189, 248, 0.3); }
+    .status-closed { background: rgba(52, 211, 153, 0.15); color: var(--emerald); border: 1px solid rgba(52, 211, 153, 0.3); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(8px);
+      display: none; justify-content: center; align-items: center; z-index: 100;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%; max-width: 500px;
+    }
+    .modal-content h3 { font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 24px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; }
+    
+    #empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); display: none; }
+
+    /* Override custom cursor */
+    @media (hover: hover) and (pointer: fine) {
+      body, a, input, textarea, select { cursor: auto !important; }
+      button, a { cursor: pointer !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="portal-nav">
+    <div class="container">
+      <a href="index.html" class="nav-logo">
+        <img src="logo.png" alt="VIION Group" class="logo-img">
+      </a>
+      <div class="nav-links">
+        <span id="user-email" style="color: var(--text-dim); margin-right: 16px; font-size: 0.9rem;"></span>
+        <button id="logoutBtn" class="btn btn-ghost" style="padding: 8px 20px;">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="portal-main">
+    <div class="container">
+      <div class="portal-header">
+        <div>
+          <h1 class="portal-title">Support Tickets</h1>
+          <p class="portal-subtitle">Track and manage your IT support requests.</p>
+        </div>
+        <button id="newTicketBtn" class="btn btn-primary">
+          + New Ticket
+        </button>
+      </div>
+
+      <div class="tickets-container">
+        <div class="ticket-row header">
+          <div>ID</div>
+          <div>Subject</div>
+          <div>Date</div>
+          <div>Status</div>
+        </div>
+        
+        <div id="tickets-list">
+          <!-- Tickets injected here -->
+          <div style="padding: 40px; text-align: center; color: var(--text-dim);">Loading tickets...</div>
+        </div>
+        
+        <div id="empty-state">
+          You don't have any support tickets yet.
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- New Ticket Modal -->
+  <div class="modal-overlay" id="ticketModal">
+    <div class="modal-content">
+      <h3>Create New Support Ticket</h3>
+      <form id="newTicketForm">
+        <div class="form-field">
+          <label>Subject</label>
+          <input type="text" id="t-subject-input" required placeholder="E.g., Server connectivity issue">
+        </div>
+        <div class="form-field">
+          <label>Description</label>
+          <textarea id="t-desc-input" required rows="4" placeholder="Please describe the issue in detail..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="closeModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitTicketBtn">Submit Ticket</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="supabase-config.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const isDemo = sessionStorage.getItem('demo_mode') === 'true';
+      let user = null;
+
+      // 1. Auth Check
+      if (!isDemo) {
+        if (!supabaseClient) {
+          document.getElementById('user-email').textContent = "Supabase Not Configured";
+          return;
+        }
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+          window.location.href = 'login.html';
+          return;
+        }
+        user = session.user;
+      } else {
+        user = { id: 'demo-user', email: 'admin@viiongroup.com (DEMO)' };
+      }
+
+      document.getElementById('user-email').textContent = user.email;
+
+      // 2. Logout
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        sessionStorage.removeItem('demo_mode');
+        if (supabaseClient && !isDemo) await supabaseClient.auth.signOut();
+        window.location.href = 'login.html';
+      });
+
+      // 3. Fetch Tickets
+      async function loadTickets() {
+        const listEl = document.getElementById('tickets-list');
+        const emptyEl = document.getElementById('empty-state');
+        
+        let data = [];
+        let error = null;
+
+        if (isDemo) {
+          // Fake data for demo
+          data = [
+            { id: '10045A', subject: 'Server Connectivity Issue', created_at: new Date().toISOString(), status: 'open' },
+            { id: '10045B', subject: 'EHR System Upgrade', created_at: new Date(Date.now() - 86400000).toISOString(), status: 'in-progress' },
+            { id: '10045C', subject: 'Firewall Installation', created_at: new Date(Date.now() - 500000000).toISOString(), status: 'closed' }
+          ];
+        } else {
+          // Ensure you have RLS policies in Supabase allowing users to SELECT their own tickets
+          const res = await supabaseClient
+            .from('tickets')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+          data = res.data;
+          error = res.error;
+        }
+
+        listEl.innerHTML = '';
+
+        if (error) {
+          console.error(error);
+          listEl.innerHTML = `<div style="padding: 20px; color: var(--rose);">Error loading tickets. Ensure database is setup.</div>`;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          emptyEl.style.display = 'block';
+        } else {
+          emptyEl.style.display = 'none';
+          data.forEach(ticket => {
+            const row = document.createElement('div');
+            row.className = 'ticket-row';
+            
+            const date = new Date(ticket.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            
+            let statusClass = 'status-open';
+            if(ticket.status === 'in-progress') statusClass = 'status-progress';
+            if(ticket.status === 'closed') statusClass = 'status-closed';
+
+            row.innerHTML = `
+              <div class="t-id">#${ticket.id.toString().substring(0,6)}</div>
+              <div class="t-subject">${ticket.subject}</div>
+              <div class="t-date">${date}</div>
+              <div><span class="t-status ${statusClass}">${ticket.status.toUpperCase()}</span></div>
+            `;
+            listEl.appendChild(row);
+          });
+        }
+      }
+
+      loadTickets();
+
+      // 4. Modal Logic
+      const modal = document.getElementById('ticketModal');
+      document.getElementById('newTicketBtn').addEventListener('click', () => modal.classList.add('active'));
+      document.getElementById('closeModalBtn').addEventListener('click', () => modal.classList.remove('active'));
+
+      // 5. Submit Ticket
+      document.getElementById('newTicketForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitTicketBtn');
+        btn.textContent = 'Submitting...';
+        btn.disabled = true;
+
+        const subject = document.getElementById('t-subject-input').value;
+        const description = document.getElementById('t-desc-input').value;
+
+        let error = null;
+        if (!isDemo) {
+          const res = await supabaseClient
+            .from('tickets')
+            .insert([
+              { user_id: user.id, subject, description, status: 'open' }
+            ]);
+          error = res.error;
+        } else {
+          // Fake success
+          alert("Demo Mode: Ticket submitted successfully! (This is just a frontend simulation)");
+        }
+
+        if (error) {
+          alert("Error creating ticket. Have you created the 'tickets' table in Supabase?");
+          console.error(error);
+        } else {
+          document.getElementById('newTicketForm').reset();
+          modal.classList.remove('active');
+          loadTickets();
+        }
+
+        btn.textContent = 'Submit Ticket';
+        btn.disabled = false;
+      });
+
+    });
+  </script>
+</body>
+</html>
