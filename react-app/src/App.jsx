@@ -1,6 +1,5 @@
 import React from 'react';
 import { AppProvider } from './context/AppContext';
-import Aurora from './components/Aurora';
 import Background3D from './components/Background3D';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -21,8 +20,6 @@ export function AppContent() {
   return (
     <div className="relative min-h-screen flex flex-col transition-colors duration-300">
 
-      {/* Aurora Background Orbs */}
-      <Aurora />
 
       {/* 3D Dynamic Cascade ('طوفان الكتب') Three.js */}
       <Background3D />
