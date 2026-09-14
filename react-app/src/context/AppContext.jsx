@@ -6,7 +6,7 @@ const AppContext = createContext(null);
 export const AppProvider = ({ children }) => {
   // Language State: 'ar' or 'en'
   const [lang, setLang] = useState(() => {
-    return localStorage.getItem('ig_lang') || 'ar';
+    return localStorage.getItem('ig_lang') || 'en';
   });
 
   // Theme State: 'light' or 'dark'
